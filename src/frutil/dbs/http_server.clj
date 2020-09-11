@@ -74,7 +74,7 @@
     (ring/router
       [["/swagger.json"
         {:get {:no-doc true
-               :swagger {:info {:title "Data Viewing Station API"}
+               :swagger {:info {:title "Frankenburg Database"}
                          :basePath "/"} ;; prefix for all paths
                :handler (swagger/create-swagger-handler)}}]
 
@@ -153,7 +153,7 @@
 
 (defn restart []
   (stop)
-  (start 8080))
+  (start 23010))
 
 
 (comment
