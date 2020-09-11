@@ -1,0 +1,12 @@
+{:deps {
+        frutil/logging            {:local/root "../logging"}
+
+        io.replikativ/datahike    {:mvn/version "0.3.1"}
+
+        http-kit                  {:mvn/version "2.4.0"}
+        ring                      {:mvn/version "1.8.1"}
+        ring/ring-defaults        {:mvn/version "0.3.2"}
+        metosin/reitit            {:mvn/version "0.5.5"}
+        metosin/reitit-dev        {:mvn/version "0.5.5"}}
+
+ :paths ["src"]}
