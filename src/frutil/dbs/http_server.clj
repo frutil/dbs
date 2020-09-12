@@ -1,6 +1,9 @@
 (ns frutil.dbs.http-server
   (:require
    [clojure.edn :as edn]
+   [clojure.pprint :refer [pprint]]
+
+   [ring.util.response :as response]
 
    [org.httpkit.server :as httpkit]
    [reitit.ring :as ring]
@@ -17,6 +20,7 @@
    [muuntaja.core :as m]
 
    [frutil.logging.core :as l]
+   [frutil.dbs.files :as files]
    [frutil.dbs.databases :as databases]))
 
 
@@ -50,6 +54,21 @@
   {:status 200
    :body (-> (databases/transact id tx) :tx-data)})
 
+
+;;; console
+
+
+(def console-dev-path "../dbs-console")
+
+(defn console [req]
+  (let [resource (-> req :path-params :resource)
+        resource (if (= resource "")
+                   "index.html"
+                   resource)
+        file (files/file-from resource
+                              [(str console-dev-path "/resources/public")
+                               (str console-dev-path "/target/public")])]
+    (response/file-response (-> file .getCanonicalPath))))
 
 
 ;;; middleware
@@ -113,7 +132,11 @@
            :delete {:summary "delete a database"
                     :parameters {:path [:map [:id qualified-keyword?]]}
                     :responses {200 {:body any?}}
-                    :handler delete-database}}]]]]
+                    :handler delete-database}}]]]
+
+       ["/console/*resource" console]]
+                      ;; {:loader (-> "/p/frutil/dbs-console/target/public")})]]
+                      ;;                   ;(java.net.URLClassLoader []})]]
 
 
       {:data {:coercion reitit.coercion.malli/coercion
