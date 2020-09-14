@@ -52,15 +52,16 @@
   {:status 200
    :body (databases/query (keyword (-> req :parameters :path :namespace)
                                    (-> req :parameters :path :name))
-                          (-> req :parameters :query :q))})
+                          (-> req :parameters :query :q edn/read-string))})
 
 
 (defn transact-database [req]
   {:status 200
    :body (-> (databases/transact (keyword (-> req :parameters :path :namespace)
                                           (-> req :parameters :path :name))
-                                 (-> req :parameters :query :tx))
-             :tx-data)})
+                                 (-> req :parameters :body :tx edn/read-string))
+             :tx-data
+             pr-str)})
 
 
 ;;; console
@@ -120,35 +121,39 @@
                                      [:namespace string?]
                                      [:name string?]]
                               :query [:map
-                                      [:q [:vector
-                                           {:swagger/type "string"
-                                            :decode/string edn/read-string}
-                                           any?]]]}
+                                      [:q string?]]}
                  :responses {200 {:body set?}}
                  :handler query-database}
-           :put {:summary "transact a database"
-                 :parameters {:path [:map
-                                     [:namespace :string]
-                                     [:name :string]]
-                              :query [:map
-                                      [:tx [:vector
-                                            {:swagger/type "string"
-                                             :decode/string edn/read-string}
-                                            any?]]]}
-                 :responses {200 {:body any?}}
-                 :handler transact-database}
            :post {:summary "create a database"
                   :parameters {:path [:map
-                                      [:namespace :string]
-                                      [:name :string]]}
+                                      [:namespace string?]
+                                      [:name string?]]}
                   :responses {200 {:body any?}}
                   :handler create-database}
            :delete {:summary "delete a database"
                     :parameters {:path [:map
-                                        [:namespace :string]
-                                        [:name :string]]}
+                                        [:namespace string?]
+                                        [:name string?]]}
                     :responses {200 {:body any?}}
-                    :handler delete-database}}]]]
+                    :handler delete-database}
+           :put {:summary "transact a database"
+                 :parameters {:path [:map
+                                     [:namespace string?]
+                                     [:name string?]]
+                              :body [:map
+                                     [:tx string?]]}
+                 :responses {200 {:body any?}}
+                 :handler transact-database}}]]]
+         ;; ["/:namespace/:name/tx"
+         ;;  {
+         ;;   :post {:summary "transact a database"
+         ;;          :parameters {:path [:map
+         ;;                              [:namespace :string]
+         ;;                              [:name :string]]
+         ;;                       :body [:map
+         ;;                              [:tx string?]]}
+         ;;          :responses {200 {:body any?}}
+         ;;          :handler transact-database}}]]]
 
        ["/console/*resource" console]]
                       ;; {:loader (-> "/p/frutil/dbs-console/target/public")})]]
