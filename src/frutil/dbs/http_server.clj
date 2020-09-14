@@ -27,34 +27,40 @@
 (defn list-databases [{{{:keys []} :query} :parameters}]
   {:status 200
    :body (into [] (map (fn [db-ident] {:ident db-ident
+                                       :namespace (namespace db-ident)
+                                       :name (name db-ident)
                                        :label (str db-ident)})
                        (databases/databases-idents)))})
 
 
-(defn create-database [{{{:keys [id]} :path} :parameters}]
-  (println "create" id)
-  (databases/create id "root")
+(defn create-database [req]
+  (databases/create (keyword (-> req :parameters :path :namespace)
+                             (-> req :parameters :path :name))
+                    "root")
   {:status 200
    :body {}})
 
 
-(defn delete-database [{{{:keys [id]} :path} :parameters}]
-  (println "delete" id)
-  (databases/delete id)
+(defn delete-database [req]
+  (databases/delete (keyword (-> req :parameters :path :namespace)
+                             (-> req :parameters :path :name)))
   {:status 200
    :body {}})
 
 
-(defn query-database [{{{:keys [id]} :path {:keys [q]} :query} :parameters}]
-  (println "query" id (type q) q)
+(defn query-database [req]
   {:status 200
-   :body (databases/query id q)})
+   :body (databases/query (keyword (-> req :parameters :path :namespace)
+                                   (-> req :parameters :path :name))
+                          (-> req :parameters :query :q))})
 
 
-(defn transact-database [{{{:keys [id]} :path {:keys [tx]} :query} :parameters}]
-  (println "transact" id tx)
+(defn transact-database [req]
   {:status 200
-   :body (-> (databases/transact id tx) :tx-data)})
+   :body (-> (databases/transact (keyword (-> req :parameters :path :namespace)
+                                          (-> req :parameters :path :name))
+                                 (-> req :parameters :query :tx))
+             :tx-data)})
 
 
 ;;; console
@@ -107,10 +113,12 @@
           {:get {:summary "list all databases"
                  :responses {200 {:body vector?}}
                  :handler list-databases}}]
-         ["/:id"
+         ["/:namespace/:name"
           {
            :get {:summary "query a database"
-                 :parameters {:path [:map [:id qualified-keyword?]]
+                 :parameters {:path [:map
+                                     [:namespace string?]
+                                     [:name string?]]
                               :query [:map
                                       [:q [:vector
                                            {:swagger/type "string"
@@ -119,7 +127,9 @@
                  :responses {200 {:body set?}}
                  :handler query-database}
            :put {:summary "transact a database"
-                 :parameters {:path [:map [:id qualified-keyword?]]
+                 :parameters {:path [:map
+                                     [:namespace :string]
+                                     [:name :string]]
                               :query [:map
                                       [:tx [:vector
                                             {:swagger/type "string"
@@ -128,11 +138,15 @@
                  :responses {200 {:body any?}}
                  :handler transact-database}
            :post {:summary "create a database"
-                  :parameters {:path [:map [:id qualified-keyword?]]}
+                  :parameters {:path [:map
+                                      [:namespace :string]
+                                      [:name :string]]}
                   :responses {200 {:body any?}}
                   :handler create-database}
            :delete {:summary "delete a database"
-                    :parameters {:path [:map [:id qualified-keyword?]]}
+                    :parameters {:path [:map
+                                        [:namespace :string]
+                                        [:name :string]]}
                     :responses {200 {:body any?}}
                     :handler delete-database}}]]]
 
