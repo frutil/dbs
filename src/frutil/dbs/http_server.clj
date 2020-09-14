@@ -26,7 +26,9 @@
 
 (defn list-databases [{{{:keys []} :query} :parameters}]
   {:status 200
-   :body (into [] (databases/databases-idents))})
+   :body (into [] (map (fn [db-ident] {:ident db-ident
+                                       :label (str db-ident)})
+                       (databases/databases-idents)))})
 
 
 (defn create-database [{{{:keys [id]} :path} :parameters}]
