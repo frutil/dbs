@@ -64,6 +64,14 @@
              pr-str)})
 
 
+(defn database-entities [req]
+  {:status 200
+   :body (databases/entities-data
+          (keyword (-> req :parameters :path :namespace)
+                   (-> req :parameters :path :name))
+          (-> req :parameters :query :wheres edn/read-string))})
+
+
 ;;; console
 
 
@@ -143,7 +151,17 @@
                               :body [:map
                                      [:tx string?]]}
                  :responses {200 {:body any?}}
-                 :handler transact-database}}]]]
+                 :handler transact-database}}]
+         ["/:namespace/:name/entities"
+          {
+           :get {:summary "database entities by query"
+                 :parameters {:path [:map
+                                     [:namespace string?]
+                                     [:name string?]]
+                              :query [:map
+                                      [:wheres string?]]}
+                 :responses {200 {:body vector?}}
+                 :handler database-entities}}]]]
          ;; ["/:namespace/:name/tx"
          ;;  {
          ;;   :post {:summary "transact a database"

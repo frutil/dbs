@@ -91,6 +91,15 @@
   (d/q q @(db-connection db-ident)))
 
 
+(defn entities-data [db-ident wheres]
+  (let [db @(db-connection db-ident)]
+    (->> db
+         (d/q (into '[:find ?e :where [?e :db/ident _]] wheres))
+         (map first)
+         (map (partial d/entity db))
+         (mapv #(select-keys % (keys %))))))
+
+
 (defn transact [db-ident tx-request]
   (d/transact (db-connection db-ident) tx-request))
 
@@ -98,6 +107,7 @@
 ;;; repl
 
 (comment
+  (def db-ident :witek/test)
   (databases-idents)
   (create :witek/test "witek")
   (delete :witek/test)
@@ -118,4 +128,8 @@
        @(db-connection :witek/test))
   (d/transact (db-connection :witek/test)
               [{:db.user/id "hogi"
-                :db.user/owner? false}]))
+                :db.user/owner? false}])
+
+  (def ids (query :witek/test '[:find ?e :where [?e :db/ident _]]))
+  (map #(d/entity @(db-connection :witek/test) (first %))
+       ids))
